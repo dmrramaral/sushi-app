@@ -1,3 +1,21 @@
+/* Reset básico e estilos globais */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  line-height: 1.6;
+}
+
+.app-container {
+  min-height: calc(100vh - 70px); /* Altura total menos altura do menu */
+}
+
 .App {
   text-align: center;
 }
