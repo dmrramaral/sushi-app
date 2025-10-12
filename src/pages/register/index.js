@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './style.css';
+import { useAuth } from '../../hooks/useAuth';
 
 const Register = () => {
   const navigate = useNavigate();
+  
+  // Usar o contexto de autenticação
+  const { register: authRegister, loading } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,7 +22,6 @@ const Register = () => {
     country: 'Brasil'
   });
   const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
 
   // Validação de senha
@@ -138,8 +141,6 @@ const Register = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      setLoading(true);
-
       try {
         // Preparar dados para a API
         const userData = {
@@ -149,50 +150,41 @@ const Register = () => {
           addresses: [address]
         };
 
-        // Chamada à API
-        const response = await fetch('http://localhost:3000/api/user/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-        });
+        // Usar o contexto de autenticação
+        const result = await authRegister(userData);
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Erro ao criar usuário');
+        if (result.success) {
+          // Redirecionar para login com state
+          navigate('/login', { 
+            state: { 
+              fromRegister: true,
+              email: formData.email,
+              message: 'Cadastro realizado com sucesso! Faça login para continuar.' 
+            } 
+          });
+        } else {
+          setErrors({
+            submit: result.error || 'Erro ao criar conta. Tente novamente.'
+          });
         }
-
-        // Redirecionar para login com state
-        navigate('/login', { 
-          state: { 
-            fromRegister: true,
-            email: formData.email,
-            message: 'Cadastro realizado com sucesso! Faça login para continuar.' 
-          } 
-        });
-
       } catch (error) {
         setErrors({
           submit: error.message || 'Erro ao criar conta. Tente novamente.'
         });
-      } finally {
-        setLoading(false);
       }
     }
   };
 
   return (
-    <div className="register-container">
-      <div className="register-header">
-        <h1>Criar Conta</h1>
-        <p>Preencha as informações abaixo para se cadastrar</p>
+    <div className="max-w-xl mx-auto my-16 p-8 bg-white rounded-xl shadow-lg">
+      <div className="text-center mb-8">
+        <h1 className="text-2xl font-bold text-red-600 mb-3">Criar Conta</h1>
+        <p className="text-gray-600">Preencha as informações abaixo para se cadastrar</p>
       </div>
 
-      <form className="register-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Nome Completo*</label>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex flex-col">
+          <label htmlFor="name" className="mb-1.5 font-medium text-gray-700">Nome Completo*</label>
           <input
             type="text"
             id="name"
@@ -200,12 +192,13 @@ const Register = () => {
             value={formData.name}
             onChange={handleChange}
             required
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
-          {errors.name && <span className="validation-error">{errors.name}</span>}
+          {errors.name && <span className="text-red-600 text-sm mt-1">{errors.name}</span>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="email">Email*</label>
+        <div className="flex flex-col">
+          <label htmlFor="email" className="mb-1.5 font-medium text-gray-700">Email*</label>
           <input
             type="email"
             id="email"
@@ -213,12 +206,13 @@ const Register = () => {
             value={formData.email}
             onChange={handleChange}
             required
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
-          {errors.email && <span className="validation-error">{errors.email}</span>}
+          {errors.email && <span className="text-red-600 text-sm mt-1">{errors.email}</span>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">Senha*</label>
+        <div className="flex flex-col">
+          <label htmlFor="password" className="mb-1.5 font-medium text-gray-700">Senha*</label>
           <input
             type="password"
             id="password"
@@ -226,13 +220,19 @@ const Register = () => {
             value={formData.password}
             onChange={handleChange}
             required
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
-          <div className="password-strength">
-            <div className={`password-strength-bar ${passwordStrength}`}></div>
+          <div className="mt-2 h-1 bg-gray-200 rounded overflow-hidden">
+            <div className={`h-full transition-all ${
+              passwordStrength === 'strength-weak' ? 'w-1/3 bg-red-500' : 
+              passwordStrength === 'strength-medium' ? 'w-2/3 bg-orange-500' : 
+              passwordStrength === 'strength-strong' ? 'w-full bg-green-500' : 
+              'w-0'
+            }`}></div>
           </div>
-          <div className="password-requirements">
+          <div className="mt-1 text-sm text-gray-600">
             <span>A senha deve conter:</span>
-            <ul>
+            <ul className="pl-5 mt-1 list-disc text-xs">
               <li>Pelo menos 6 caracteres</li>
               <li>Uma letra maiúscula</li>
               <li>Uma letra minúscula</li>
@@ -240,11 +240,11 @@ const Register = () => {
               <li>Um caractere especial (!@#$%^&*)</li>
             </ul>
           </div>
-          {errors.password && <span className="validation-error">{errors.password}</span>}
+          {errors.password && <span className="text-red-600 text-sm mt-1">{errors.password}</span>}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirmar Senha*</label>
+        <div className="flex flex-col">
+          <label htmlFor="confirmPassword" className="mb-1.5 font-medium text-gray-700">Confirmar Senha*</label>
           <input
             type="password"
             id="confirmPassword"
@@ -252,72 +252,79 @@ const Register = () => {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
-          {errors.confirmPassword && <span className="validation-error">{errors.confirmPassword}</span>}
+          {errors.confirmPassword && <span className="text-red-600 text-sm mt-1">{errors.confirmPassword}</span>}
         </div>
 
-        <div className="form-divider">
-          <span>Endereço</span>
+        <div className="flex items-center my-5">
+          <div className="flex-grow h-px bg-gray-300"></div>
+          <span className="px-3 text-sm text-gray-500">Endereço</span>
+          <div className="flex-grow h-px bg-gray-300"></div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="street">Rua</label>
+        <div className="flex flex-col">
+          <label htmlFor="street" className="mb-1.5 font-medium text-gray-700">Rua</label>
           <input
             type="text"
             id="street"
             name="street"
             value={address.street}
             onChange={handleAddressChange}
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="city">Cidade</label>
+        <div className="flex flex-col">
+          <label htmlFor="city" className="mb-1.5 font-medium text-gray-700">Cidade</label>
           <input
             type="text"
             id="city"
             name="city"
             value={address.city}
             onChange={handleAddressChange}
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="state">Estado</label>
+        <div className="flex flex-col">
+          <label htmlFor="state" className="mb-1.5 font-medium text-gray-700">Estado</label>
           <input
             type="text"
             id="state"
             name="state"
             value={address.state}
             onChange={handleAddressChange}
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="zipCode">CEP</label>
+        <div className="flex flex-col">
+          <label htmlFor="zipCode" className="mb-1.5 font-medium text-gray-700">CEP</label>
           <input
             type="text"
             id="zipCode"
             name="zipCode"
             value={address.zipCode}
             onChange={handleAddressChange}
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
         </div>
 
-        {errors.submit && <div className="validation-error">{errors.submit}</div>}
+        {errors.submit && <div className="text-red-600 text-sm mt-2">{errors.submit}</div>}
 
         <button 
           type="submit" 
-          className="register-button" 
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-md mt-3 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           disabled={loading}
         >
           {loading ? 'Cadastrando...' : 'Cadastrar'}
         </button>
       </form>
 
-      <div className="login-link">
+      <div className="text-center mt-6">
         <p>
-          Já tem uma conta? <Link to="/login">Faça Login</Link>
+          Já tem uma conta? <Link to="/login" className="text-green-800 font-medium hover:underline">Faça Login</Link>
         </p>
       </div>
     </div>
