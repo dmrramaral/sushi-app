@@ -1,13 +1,18 @@
 
 import { Route, Routes } from 'react-router-dom';
+import AdminRoute from './components/AdminRoute';
 import NavMenu from './components/NavMenu/index';
 import ProtectedRoute from './components/ProtectedRoute';
-import UserProfile from './components/UserProfile';
 import { AuthProvider } from './contexts/AuthContext';
 import Home from './pages/home/index';
 import Login from './pages/login/index';
 import NotFound from './pages/notFound';
+import ProfilePage from './pages/profile/index';
 import Register from './pages/register/index';
+// Admin Pages
+import AdminDashboard from './pages/admin/Dashboard';
+import ProductManagement from './pages/admin/Products';
+import ProductForm from './pages/admin/Products/ProductForm';
 
 function App() {
   return (
@@ -36,10 +41,45 @@ function App() {
             path="/perfil" 
             element={
               <ProtectedRoute>
-                <UserProfile />
+                <ProfilePage />
               </ProtectedRoute>
             } 
           />
+          
+          {/* Rotas Administrativas */}
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/products" 
+            element={
+              <AdminRoute>
+                <ProductManagement />
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/products/new" 
+            element={
+              <AdminRoute>
+                <ProductForm />
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/products/:id/edit" 
+            element={
+              <AdminRoute>
+                <ProductForm />
+              </AdminRoute>
+            } 
+          />
+          
           <Route path="/cardapio" element={<h1 className="py-24 px-5 text-center">Página do Cardápio em construção</h1>} />
           <Route path="/sobre" element={<h1 className="py-24 px-5 text-center">Página Sobre em construção</h1>} />
           <Route path="/contato" element={<h1 className="py-24 px-5 text-center">Página de Contato em construção</h1>} />

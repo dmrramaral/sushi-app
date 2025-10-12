@@ -1,4 +1,4 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const UserProfile = () => {
     const { user, isAuthenticated, logout, error, clearError } = useAuth();
@@ -44,6 +44,12 @@ const UserProfile = () => {
                         <strong>Token:</strong> 
                         <span className="ml-2 text-xs text-gray-500 font-mono">
                             {user?.token ? `${user.token.substring(0, 20)}...` : 'Não disponível'}
+                        </span>
+                    </p>
+                    <p className="text-gray-600">
+                        <strong>Funções:</strong> 
+                        <span className="ml-2 text-sm text-gray-700">
+                            {user?.role ? user.role : 'Nenhuma'}
                         </span>
                     </p>
                 </div>

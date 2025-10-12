@@ -59,6 +59,38 @@ class AuthService {
     isAuthenticated() {
         return !!this.getToken();
     }
+
+    async getCurrentUser() {
+        const token = this.getToken();
+        if (!token) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token inválido, fazer logout
+                    this.logout();
+                    throw new Error('Token inválido');
+                }
+                throw new Error('Erro ao buscar dados do usuário');
+            }
+
+            const data = await response.json();
+            return data.user; // Retorna apenas o objeto user da resposta
+        } catch (error) {
+            console.error('Erro ao buscar usuário:', error);
+            throw error;
+        }
+    }
 }
 
 const authService = new AuthService();

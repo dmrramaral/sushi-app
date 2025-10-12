@@ -9,6 +9,13 @@ const initialState = {
     error: null,
 };
 
+// Perfis/Roles do sistema
+export const USER_ROLES = {
+    ADMIN: 'admin',
+    USER: 'user',
+    MANAGER: 'manager'
+};
+
 // Tipos de ações
 const AUTH_ACTIONS = {
     LOGIN_START: 'LOGIN_START',
@@ -105,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
+                console.log('AuthProvider: Inicializando...'); // Debug
                 dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
                 
                 const token = authService.getToken();
@@ -128,33 +136,12 @@ export const AuthProvider = ({ children }) => {
         initializeAuth();
     }, []);
 
-    // Função para obter dados do usuário (implementar conforme sua API)
+    // Função para obter dados do usuário usando a API /user/profile
     const getUserData = async () => {
         try {
-            const token = authService.getToken();
-            if (!token) {
-                return null;
-            }
-            
-            // Implementar chamada à API para obter dados do usuário
-            // const response = await fetch(`${API_BASE_URL}/auth/me`, {
-            //     headers: {
-            //         'Authorization': `Bearer ${token}`,
-            //     },
-            // });
-            // 
-            // if (!response.ok) {
-            //     throw new Error('Token inválido');
-            // }
-            // 
-            // return await response.json();
-            
-            // Por enquanto, retorna dados básicos - você pode implementar conforme sua API
-            return { token };
+            return await authService.getCurrentUser();
         } catch (error) {
             console.error('Erro ao obter dados do usuário:', error);
-            // Remove token inválido
-            authService.logout();
             return null;
         }
     };
@@ -167,7 +154,10 @@ export const AuthProvider = ({ children }) => {
             const response = await authService.login(email, password);
             
             // Obter dados do usuário após login bem-sucedido
-            const userData = await getUserData() || { email, token: response.token };
+            const userData = await getUserData() || { 
+                email, 
+                token: response.token
+            };
             
             dispatch({ 
                 type: AUTH_ACTIONS.LOGIN_SUCCESS, 
@@ -214,6 +204,24 @@ export const AuthProvider = ({ children }) => {
         dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
     }, []);
 
+    // Funções helper para verificar roles
+    const hasRole = useCallback((role) => {
+        return state.user?.role === role;
+    }, [state.user]);
+
+    const isAdmin = useCallback(() => {
+        // Verifica tanto o campo 'role' quanto o campo 'admin' booleano
+        return state.user?.role === USER_ROLES.ADMIN || state.user?.admin === true;
+    }, [state.user]);
+
+    const isManager = useCallback(() => {
+        return hasRole(USER_ROLES.MANAGER);
+    }, [hasRole]);
+
+    const canAccessAdmin = useCallback(() => {
+        return isAdmin() || isManager();
+    }, [isAdmin, isManager]);
+
     // Valor do contexto memorizado para evitar re-renders desnecessários
     const value = useMemo(() => ({
         // Estado
@@ -227,7 +235,13 @@ export const AuthProvider = ({ children }) => {
         register,
         logout,
         clearError,
-    }), [state, login, register, logout, clearError]);
+        
+        // Verificações de role
+        hasRole,
+        isAdmin,
+        isManager,
+        canAccessAdmin,
+    }), [state, login, register, logout, clearError, hasRole, isAdmin, isManager, canAccessAdmin]);
 
     return (
         <AuthContext.Provider value={value}>
@@ -239,7 +253,7 @@ export const AuthProvider = ({ children }) => {
 // Hook personalizado para usar o contexto
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    
+    console.log('useAuth context:', context); // Debug
     if (context === undefined) {
         throw new Error('useAuth deve ser usado dentro de um AuthProvider');
     }
