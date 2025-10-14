@@ -1,4 +1,3 @@
-
 import { Route, Routes } from 'react-router-dom';
 import AdminRoute from './components/AdminRoute';
 import NavMenu from './components/NavMenu/index';
@@ -9,6 +8,9 @@ import Login from './pages/login/index';
 import NotFound from './pages/notFound';
 import ProfilePage from './pages/profile/index';
 import Register from './pages/register/index';
+import Unauthorized from './pages/unauthorized';
+// Public Pages
+import Menu from './pages/menu';
 // Admin Pages
 import AdminDashboard from './pages/admin/Dashboard';
 import ProductManagement from './pages/admin/Products';
@@ -46,6 +48,10 @@ function App() {
             } 
           />
           
+          {/* Página do Cardápio - PÚBLICA (carrinho só para autenticados) */}
+          <Route path="/cardapio" element={<Menu />} />
+          <Route path="/menu" element={<Menu />} />
+          
           {/* Rotas Administrativas */}
           <Route 
             path="/admin" 
@@ -80,9 +86,12 @@ function App() {
             } 
           />
           
-          <Route path="/cardapio" element={<h1 className="py-24 px-5 text-center">Página do Cardápio em construção</h1>} />
+          {/* Páginas Informativas */}
           <Route path="/sobre" element={<h1 className="py-24 px-5 text-center">Página Sobre em construção</h1>} />
           <Route path="/contato" element={<h1 className="py-24 px-5 text-center">Página de Contato em construção</h1>} />
+          
+          {/* Páginas de Erro */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
