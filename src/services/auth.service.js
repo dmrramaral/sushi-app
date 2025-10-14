@@ -1,21 +1,14 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+import api from './api';
 
 class AuthService {
     async login(email, password) {
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email, password }),
+            const response = await api.post('/auth/login', { 
+                email, 
+                password 
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Falha no login');
-            }
+            const data = response.data;
 
             // Salvar token no localStorage
             localStorage.setItem('token', data.token);
@@ -28,21 +21,8 @@ class AuthService {
 
     async register(userData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/user/create`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(userData),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Erro ao criar usuário');
-            }
-
-            return data;
+            const response = await api.post('/user/create', userData);
+            return response.data;
         } catch (error) {
             throw error;
         }
@@ -67,27 +47,16 @@ class AuthService {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/user/profile`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    // Token inválido, fazer logout
-                    this.logout();
-                    throw new Error('Token inválido');
-                }
-                throw new Error('Erro ao buscar dados do usuário');
-            }
-
-            const data = await response.json();
-            return data.user; // Retorna apenas o objeto user da resposta
+            const response = await api.get('/user/profile');
+            return response.data.user; // Retorna apenas o objeto user da resposta
         } catch (error) {
             console.error('Erro ao buscar usuário:', error);
+            
+            // Se o erro for de autorização, fazer logout
+            if (error.message.includes('401') || error.message.includes('Token inválido')) {
+                this.logout();
+            }
+            
             throw error;
         }
     }
