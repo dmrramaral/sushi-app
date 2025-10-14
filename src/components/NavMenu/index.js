@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 
 const NavMenu = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -8,6 +10,25 @@ const NavMenu = () => {
   
   // Usar o contexto de autenticação
   const { isAuthenticated, user, logout, loading, canAccessAdmin } = useAuth();
+  const { items: cartItems, totalItems, totalPrice, removeItem, refreshCart, updateQuantity } = useCart();
+  const [cartOpen, setCartOpen] = useState(false);
+  const cartRef = useRef(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCart();
+    }
+  }, [isAuthenticated, refreshCart]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (cartRef.current && !cartRef.current.contains(e.target)) {
+        setCartOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   console.log('User in NavMenu:', user); // Debug
   console.log('Can Access Admin:', canAccessAdmin && canAccessAdmin()); // Debug admin access
 
@@ -19,6 +40,7 @@ const NavMenu = () => {
   const handleLogout = () => {
     logout();
     setMobileMenuOpen(false);
+    navigate('/'); // Redireciona para home após logout
   };
 
   const handleProfileRedirect = () => {
@@ -67,7 +89,41 @@ const NavMenu = () => {
               </div>
             ) : isAuthenticated ? (
               <div className="space-y-3">
-                <p className="text-gray-600 text-sm">Olá, {user?.email?.split('@')[0] || 'Usuário'}</p>
+                <p className="text-gray-600 text-sm">Olá, {user?.name || 'Usuário'}</p>
+                
+                {/* Carrinho e Pedidos - Mobile */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button 
+                    className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded transition-colors text-center relative"
+                    onClick={() => {
+                      navigate('/carrinho');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <ShoppingCartIcon className="h-5 w-5" />
+                      <span className="text-sm">Carrinho</span>
+                      {totalItems > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                          {totalItems}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                  <button 
+                    className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded transition-colors text-center"
+                    onClick={() => {
+                      navigate('/meus-pedidos');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-sm">📦</span>
+                      <span className="text-sm">Pedidos</span>
+                    </div>
+                  </button>
+                </div>
+
                 <button 
                   className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded transition-colors text-left"
                   onClick={handleProfileRedirect}
@@ -121,7 +177,113 @@ const NavMenu = () => {
           {loading ? (
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
           ) : isAuthenticated ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              {/* Carrinho */}
+              <div className="relative" ref={cartRef}>
+                <button
+                  onClick={() => setCartOpen(o => !o)}
+                  className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  title="Carrinho"
+                >
+                  <ShoppingCartIcon className="h-6 w-6 text-gray-700" />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
+                {cartOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white shadow-2xl rounded-lg border border-gray-200 z-50 animate-fade-in">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-800 text-sm">Meu Carrinho</h3>
+                      <button onClick={() => setCartOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                        <XMarkIcon className="h-5 w-5 text-gray-500" />
+                      </button>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+                      {cartItems.length === 0 && (
+                        <div className="p-4 text-sm text-gray-500 text-center">Carrinho vazio</div>
+                      )}
+                      {cartItems.map(item => {
+                        const price = item.product?.price || 0;
+                        const line = price * item.quantity;
+                        return (
+                            <div key={item.productId} className="p-3">
+                            <div className="w-14 h-14 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                              {item.product?.images && item.product.images[0] ? (
+                                <img src={item.product.images[0]} alt={item.product?.name} className="object-cover w-full h-full" />
+                              ) : (
+                                <span className="text-xs text-gray-400">Sem imagem</span>
+                              )}
+                            </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-800 truncate">{item.product?.name || 'Produto'}</p>
+                                    <p className="text-[11px] text-gray-500">R$ {price.toFixed(2)} cada</p>
+                                    <p className="text-[11px] text-green-600 font-semibold">Subtotal: R$ {line.toFixed(2)}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => removeItem(item.productId)}
+                                    className="h-6 w-6 text-gray-400 hover:text-red-600 flex items-center justify-center flex-shrink-0"
+                                    title="Remover"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-gray-600">Quantidade:</span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                      className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded text-xs flex items-center justify-center"
+                                      title="Diminuir"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="font-semibold text-gray-800 min-w-[1.5rem] text-center text-sm">
+                                      {item.quantity}
+                                    </span>
+                                    <button
+                                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                      className="w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded text-xs flex items-center justify-center"
+                                      title="Aumentar"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+                      <div className="flex items-center justify-between mb-3 text-sm">
+                        <span className="text-gray-600">Total:</span>
+                        <span className="font-semibold text-green-600">R$ {totalPrice.toFixed(2)}</span>
+                      </div>
+                      <button
+                        disabled={cartItems.length === 0}
+                        className={`w-full py-2 rounded-md text-sm font-semibold transition-colors ${
+                          cartItems.length === 0
+                            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                            : 'bg-red-600 hover:bg-red-700 text-white'
+                        }`}
+                        onClick={() => { setCartOpen(false); navigate('/carrinho'); }}
+                      >
+                        Ver Carrinho
+                      </button>
+                      <button
+                        className="w-full py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 border border-gray-200"
+                        onClick={() => { setCartOpen(false); navigate('/meus-pedidos'); }}
+                      >
+                        Meus Pedidos
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <span className="text-gray-700 text-sm">Olá, {user?.email?.split('@')[0] || 'Usuário'}</span>
               <button 
                 className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-3 rounded transition-colors text-sm"

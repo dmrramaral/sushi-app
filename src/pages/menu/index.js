@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useCallback, useEffect, useState } from 'react';
 import ProductCard from '../../components/ProductCard';
+import categoryService from '../../services/category.service';
 import productService from '../../services/product.service';
 
 /**
@@ -9,6 +10,8 @@ import productService from '../../services/product.service';
  */
 const Menu = () => {
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -16,30 +19,56 @@ const Menu = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [totalProducts, setTotalProducts] = useState(0);
 
-    // Função para carregar produtos
-    const loadProducts = async () => {
-        setLoading(true);
-        setError('');
-
+    // Buscar produtos (com opção de filtrar por categoria)
+    const loadProducts = useCallback(async (category = null) => {
         try {
-            const response = await productService.getAllProducts(currentPage, 12);
+            setLoading(true);
+            let data;
             
-            setProducts(response.results || []);
-            setTotalPages(response.totalPages || 1);
-            setTotalProducts(response.total || 0);
-        } catch (err) {
-            setError('Erro ao carregar o cardápio. Tente novamente mais tarde.');
-            console.error('Erro ao carregar produtos:', err);
+            if (category && category !== 'Todos') {
+                data = await productService.getProductsByCategory(category, currentPage);
+            } else {
+                data = await productService.getAllProducts(currentPage);
+            }
+            
+            setProducts(data.products);
+            setTotalPages(data.totalPages);
+            setTotalProducts(data.total || data.products.length);
+        } catch (error) {
+            console.error('Erro ao carregar produtos:', error);
+            setError('Erro ao carregar produtos. Tente novamente.');
         } finally {
             setLoading(false);
         }
+    }, [currentPage]);     const loadCategories = async () => {
+            try {
+                const response = await categoryService.getAllCategories();
+                setCategories(response || []);
+            } catch (err) {
+                console.error('Erro ao carregar categorias:', err);
+            }
+        };
+
+    // Carregar categorias uma vez
+    useEffect(() => {
+        loadCategories();
+    }, []);
+
+    // Buscar produtos quando mudar a página ou categoria
+    useEffect(() => {
+        loadProducts(selectedCategory);
+    }, [currentPage, selectedCategory, loadProducts]);
+
+    // Funções para manipular filtros de categoria
+    const handleSelectCategory = (categoryId) => {
+        setCurrentPage(1);
+        setSelectedCategory(categoryId);
     };
 
-    // Buscar produtos ao carregar a página e quando mudar a página
-    useEffect(() => {
-        loadProducts();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
+    const handleClearCategory = () => {
+        setCurrentPage(1);
+        setSelectedCategory(null);
+    };
 
     // Função de busca
     const handleSearch = async (e) => {
@@ -131,17 +160,90 @@ const Menu = () => {
                 {/* Informação de resultados */}
                 <div className="mb-6 flex items-center justify-between">
                     <p className="text-gray-600">
-                        {loading 
-                            ? 'Carregando...' 
-                            : `${totalProducts} ${totalProducts === 1 ? 'prato encontrado' : 'pratos encontrados'}`
-                        }
+                        {loading ? 'Carregando...' : (() => {
+                            const produtoTexto = totalProducts === 1 ? 'prato encontrado' : 'pratos encontrados';
+                            return `${totalProducts} ${produtoTexto}`;
+                        })()}
                     </p>
                     
-                    {/* Futura implementação de filtros */}
-                    <button className="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-                        <FunnelIcon className="h-5 w-5" />
-                        <span>Filtros</span>
-                    </button>
+                    {/* Filtros de categoria */}
+                    <div className="flex items-center gap-2">
+                        <FunnelIcon className="h-5 w-5 text-gray-600" />
+                        <span className="text-gray-600">Categorias:</span>
+                        <div className="flex gap-2 flex-wrap">
+                            <button
+                                onClick={handleClearCategory}
+                                className={`px-3 py-1 rounded-full text-sm transition-all ${
+                                    !selectedCategory 
+                                        ? 'bg-red-500 text-white' 
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            >
+                                Todas
+                            </button>
+                            {categories.slice(0, 4).map(cat => (
+                                <button
+                                    key={cat._id}
+                                    onClick={() => handleSelectCategory(cat._id)}
+                                    className={`px-3 py-1 rounded-full text-sm transition-all ${
+                                        selectedCategory === cat._id 
+                                            ? 'bg-red-500 text-white' 
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Filtros de categoria - Seção completa */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold mb-4 text-gray-800">Categorias</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <button
+                            onClick={handleClearCategory}
+                            className={`px-4 py-3 rounded-lg font-medium text-sm transition-all transform hover:scale-105 shadow-md ${
+                                !selectedCategory 
+                                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200' 
+                                    : 'bg-white text-gray-700 hover:bg-red-50 border border-gray-200'
+                            }`}
+                        >
+                            🍱 Todas
+                        </button>
+                        {categories.map(cat => {
+                            // Ícones para diferentes categorias
+                            const getCategoryIcon = (name) => {
+                                const n = name?.toLowerCase() || '';
+                                if (n.includes('sushi')) return '🍣';
+                                if (n.includes('nigiri')) return '🐟';
+                                if (n.includes('hot') || n.includes('quente')) return '🔥';
+                                if (n.includes('temaki')) return '🌯';
+                                if (n.includes('yakisoba')) return '🍜';
+                                if (n.includes('bebida')) return '🥤';
+                                if (n.includes('combo')) return '🍱'    ;
+                                return '🍱';
+                            };
+
+                            return (
+                                <button
+                                    key={cat._id}
+                                    onClick={() => {
+                                        console.log('Clicando na categoria:', cat.name, 'ID:', cat._id);
+                                        handleSelectCategory(cat._id);
+                                    }}
+                                    className={`px-4 py-3 rounded-lg font-medium text-sm transition-all transform hover:scale-105 shadow-md ${
+                                        selectedCategory === cat._id 
+                                            ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200' 
+                                            : 'bg-white text-gray-700 hover:bg-red-50 border border-gray-200'
+                                    }`}
+                                >
+                                    {getCategoryIcon(cat.name)} {cat.name || 'Categoria'}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Mensagem de Erro */}

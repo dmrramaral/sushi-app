@@ -3,6 +3,7 @@ import AdminRoute from './components/AdminRoute';
 import NavMenu from './components/NavMenu/index';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import Home from './pages/home/index';
 import Login from './pages/login/index';
 import NotFound from './pages/notFound';
@@ -15,13 +16,16 @@ import Menu from './pages/menu';
 import AdminDashboard from './pages/admin/Dashboard';
 import ProductManagement from './pages/admin/Products';
 import ProductForm from './pages/admin/Products/ProductForm';
+import CartPage from './pages/cart';
+import OrdersPage from './pages/orders';
 
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-[calc(100vh-70px)]">
-        <NavMenu />
-        <Routes>
+      <CartProvider>
+        <div className="min-h-[calc(100vh-70px)]">
+          <NavMenu />
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route 
             path="/login" 
@@ -51,6 +55,8 @@ function App() {
           {/* Página do Cardápio - PÚBLICA (carrinho só para autenticados) */}
           <Route path="/cardapio" element={<Menu />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/carrinho" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/meus-pedidos" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
           
           {/* Rotas Administrativas */}
           <Route 
@@ -93,8 +99,9 @@ function App() {
           {/* Páginas de Erro */}
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+          </Routes>
+        </div>
+      </CartProvider>
     </AuthProvider>
   );
 }
