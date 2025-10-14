@@ -12,6 +12,7 @@ class ProductService {
             const response = await api.get(`/product/products`, {
                 params: { page, limit }
             });
+            console.log('Produtos buscados com sucesso:', response.data);
             return response.data;
         } catch (error) {
             console.error('Erro ao buscar produtos:', error);

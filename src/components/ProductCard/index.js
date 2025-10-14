@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
 import { ShoppingCartIcon, StarIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
+import { useState, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import cartService from '../../services/cart.service';
+import { useCart } from '../../contexts/CartContext';
 
 /**
  * Componente de Card de Produto
@@ -10,8 +10,15 @@ import cartService from '../../services/cart.service';
  */
 const ProductCard = ({ product, onAddToCart }) => {
     const { isAuthenticated } = useAuth();
+    const { addItem, updateQuantity, items } = useCart();
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+
+    // Encontrar a quantidade atual no carrinho
+    const currentQuantity = useMemo(() => {
+        const cartItem = items.find(item => item.productId === product._id || item.product?._id === product._id);
+        return cartItem ? cartItem.quantity : 0;
+    }, [items, product._id]);
 
     // Função para formatar preço em Real
     const formatPrice = (price) => {
@@ -50,7 +57,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         setMessage('');
 
         try {
-            await cartService.addToCart(product._id, 1);
+            await addItem(product._id, 1);
             setMessage('Produto adicionado ao carrinho!');
             
             // Chama callback se fornecido
@@ -66,6 +73,54 @@ const ProductCard = ({ product, onAddToCart }) => {
             setLoading(false);
         }
     };
+
+        // Função para aumentar quantidade
+        const handleIncrease = async () => {
+            if (!isAuthenticated) {
+                setMessage('Você precisa estar logado para adicionar produtos ao carrinho');
+                setTimeout(() => setMessage(''), 3000);
+                return;
+            }
+
+            setLoading(true);
+            setMessage('');
+
+            try {
+                const newQuantity = currentQuantity + 1;
+                if (currentQuantity === 0) {
+                    await addItem(product._id, 1);
+                } else {
+                    await updateQuantity(product._id, newQuantity);
+                }
+                setMessage('Quantidade atualizada!');
+                setTimeout(() => setMessage(''), 2000);
+            } catch (error) {
+                setMessage(error.message || 'Erro ao atualizar quantidade');
+                setTimeout(() => setMessage(''), 3000);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Função para diminuir quantidade
+        const handleDecrease = async () => {
+            if (!isAuthenticated || currentQuantity === 0) return;
+
+            setLoading(true);
+            setMessage('');
+
+            try {
+                const newQuantity = currentQuantity - 1;
+                await updateQuantity(product._id, newQuantity);
+                setMessage(newQuantity === 0 ? 'Produto removido do carrinho!' : 'Quantidade atualizada!');
+                setTimeout(() => setMessage(''), 2000);
+            } catch (error) {
+                setMessage(error.message || 'Erro ao atualizar quantidade');
+                setTimeout(() => setMessage(''), 3000);
+            } finally {
+                setLoading(false);
+            }
+        };
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -83,18 +138,7 @@ const ProductCard = ({ product, onAddToCart }) => {
                     </div>
                 )}
                 
-                {/* Badge de estoque */}
-                {product.stock === 0 && (
-                    <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Esgotado
-                    </div>
-                )}
                 
-                {product.stock > 0 && product.stock < 5 && (
-                    <div className="absolute top-2 right-2 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                        Últimas unidades
-                    </div>
-                )}
             </div>
 
             {/* Informações do Produto */}
@@ -139,20 +183,65 @@ const ProductCard = ({ product, onAddToCart }) => {
 
                 {/* Botão de adicionar ao carrinho - apenas para autenticados */}
                 {isAuthenticated && (
-                    <button
-                        onClick={handleAddToCart}
-                        disabled={loading || product.stock === 0}
-                        className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold transition-colors ${
-                            product.stock === 0
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : loading
-                                ? 'bg-blue-400 text-white cursor-wait'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
-                        }`}
-                    >
-                        <ShoppingCartIcon className="h-5 w-5" />
-                        {loading ? 'Adicionando...' : 'Adicionar ao Carrinho'}
-                    </button>
+                        <div className="space-y-2">
+                            {currentQuantity === 0 ? (
+                                <button
+                                    onClick={handleAddToCart}
+                                    disabled={loading || product.stock === 0}
+                                    className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold transition-colors ${
+                                        product.stock === 0
+                                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            : loading
+                                            ? 'bg-blue-400 text-white cursor-wait'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                                >
+                                    <ShoppingCartIcon className="h-5 w-5" />
+                                    {loading ? 'Adicionando...' : 'Adicionar ao Carrinho'}
+                                </button>
+                            ) : (
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-2">
+                                        <span className="text-sm font-medium text-green-700">
+                                            {currentQuantity} no carrinho
+                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handleDecrease}
+                                                disabled={loading}
+                                                className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                                            >
+                                                -
+                                            </button>
+                                            <span className="font-semibold text-gray-800 min-w-[2rem] text-center">
+                                                {currentQuantity}
+                                            </span>
+                                            <button
+                                                onClick={handleIncrease}
+                                                disabled={loading || product.stock <= currentQuantity}
+                                                className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={handleAddToCart}
+                                        disabled={loading || product.stock <= currentQuantity}
+                                        className={`w-full flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+                                            product.stock <= currentQuantity
+                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                : loading
+                                                ? 'bg-blue-400 text-white cursor-wait'
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                        }`}
+                                    >
+                                        <ShoppingCartIcon className="h-4 w-4" />
+                                        {loading ? 'Adicionando...' : 'Adicionar +1'}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                 )}
 
                 {/* Mensagem para não autenticados */}
@@ -162,10 +251,7 @@ const ProductCard = ({ product, onAddToCart }) => {
                     </div>
                 )}
 
-                {/* Estoque */}
-                <div className="mt-2 text-sm text-gray-500 text-center">
-                    {product.stock > 0 ? `${product.stock} em estoque` : 'Indisponível'}
-                </div>
+              
             </div>
         </div>
     );
