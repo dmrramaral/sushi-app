@@ -13,6 +13,7 @@ import Unauthorized from './pages/unauthorized';
 // Public Pages
 import Menu from './pages/menu';
 // Admin Pages
+import AdminPanel from './pages/admin/AdminPanel';
 import AdminDashboard from './pages/admin/Dashboard';
 import ProductManagement from './pages/admin/Products';
 import ProductForm from './pages/admin/Products/ProductForm';
@@ -64,6 +65,14 @@ function App() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            } 
+          />
+          <Route 
+            path="/admin/painel" 
+            element={
+              <AdminRoute>
+                <AdminPanel />
               </AdminRoute>
             } 
           />

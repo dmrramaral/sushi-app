@@ -8,16 +8,10 @@ class ProductService {
      * @returns {Promise} - Lista de produtos
      */
     async getAllProducts(page = 1, limit = 12) {
-        try {
-            const response = await api.get(`/product/products`, {
-                params: { page, limit }
-            });
-            console.log('Produtos buscados com sucesso:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao buscar produtos:', error);
-            throw error;
-        }
+        const response = await api.get(`/product/products`, {
+            params: { page, limit }
+        });
+        return response.data;
     }
 
     /**
@@ -26,13 +20,8 @@ class ProductService {
      * @returns {Promise} - Dados do produto
      */
     async getProductById(id) {
-        try {
-            const response = await api.get(`/product/products/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao buscar produto:', error);
-            throw error;
-        }
+        const response = await api.get(`/product/products/${id}`);
+        return response.data;
     }
 
     /**
@@ -43,15 +32,10 @@ class ProductService {
      * @returns {Promise} - Lista de produtos da categoria
      */
     async getProductsByCategory(categoryId, page = 1, limit = 12) {
-        try {
-            const response = await api.get('/product/products', {
-                params: { category: categoryId, page, limit }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao buscar produtos por categoria:', error);
-            throw error;
-        }
+        const response = await api.get('/product/products', {
+            params: { category: categoryId, page, limit }
+        });
+        return response.data;
     }
 
     /**
@@ -62,15 +46,41 @@ class ProductService {
      * @returns {Promise} - Lista de produtos encontrados
      */
     async searchProducts(searchTerm, page = 1, limit = 12) {
-        try {
-            const response = await api.get('/product/products/search', {
-                params: { search: searchTerm, page, limit }
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao pesquisar produtos:', error);
-            throw error;
-        }
+        const response = await api.get('/product/products/search', {
+            params: { search: searchTerm, page, limit }
+        });
+        return response.data;
+    }
+
+    /**
+     * Cria um novo produto (Admin)
+     * @param {object} productData - Dados do produto
+     * @returns {Promise} - Produto criado
+     */
+    async createProduct(productData) {
+        const response = await api.post('/product/products/create', productData);
+        return response.data;
+    }
+
+    /**
+     * Atualiza um produto (Admin)
+     * @param {string} id - ID do produto
+     * @param {object} productData - Dados atualizados
+     * @returns {Promise} - Produto atualizado
+     */
+    async updateProduct(id, productData) {
+        const response = await api.put(`/product/products/${id}`, productData);
+        return response.data;
+    }
+
+    /**
+     * Deleta um produto (Admin)
+     * @param {string} id - ID do produto
+     * @returns {Promise}
+     */
+    async deleteProduct(id) {
+        const response = await api.delete(`/product/products/${id}`);
+        return response.data;
     }
 }
 

@@ -6,13 +6,8 @@ class CategoryService {
      * @returns {Promise} - Lista de categorias
      */
     async getAllCategories() {
-        try {
-            const response = await api.get('/category/categories');
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao buscar categorias:', error);
-            throw error;
-        }
+        const response = await api.get('/category/categories');
+        return response.data;
     }
 
     /**
@@ -21,13 +16,8 @@ class CategoryService {
      * @returns {Promise} - Dados da categoria
      */
     async getCategoryById(id) {
-        try {
-            const response = await api.get(`/category/categories/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao buscar categoria:', error);
-            throw error;
-        }
+        const response = await api.get(`/category/categories/${id}`);
+        return response.data;
     }
 
     /**
@@ -36,13 +26,8 @@ class CategoryService {
      * @returns {Promise} - Categoria criada
      */
     async createCategory(categoryData) {
-        try {
-            const response = await api.post('/category/categories', categoryData);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao criar categoria:', error);
-            throw error;
-        }
+        const response = await api.post('/category/categories/create', categoryData);
+        return response.data;
     }
 
     /**
@@ -52,13 +37,8 @@ class CategoryService {
      * @returns {Promise} - Categoria atualizada
      */
     async updateCategory(id, categoryData) {
-        try {
-            const response = await api.put(`/category/categories/${id}`, categoryData);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao atualizar categoria:', error);
-            throw error;
-        }
+        const response = await api.put(`/category/categories/${id}`, categoryData);
+        return response.data;
     }
 
     /**
@@ -67,13 +47,8 @@ class CategoryService {
      * @returns {Promise} - Resposta da remoção
      */
     async deleteCategory(id) {
-        try {
-            const response = await api.delete(`/category/categories/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error('Erro ao remover categoria:', error);
-            throw error;
-        }
+        const response = await api.delete(`/category/categories/${id}`);
+        return response.data;
     }
 }
 

@@ -1,64 +1,71 @@
 import api from './api';
 
 class AuthService {
+    /**
+     * Realiza login do usuário
+     * @param {string} email - Email do usuário
+     * @param {string} password - Senha do usuário
+     * @returns {Promise} Dados do usuário e token
+     */
     async login(email, password) {
-        try {
-            const response = await api.post('/auth/login', { 
-                email, 
-                password 
-            });
+        const response = await api.post('/auth/login', { 
+            email, 
+            password 
+        });
 
-            const data = response.data;
+        const data = response.data;
 
-            // Salvar token no localStorage
-            localStorage.setItem('token', data.token);
+        // Salvar token no localStorage
+        localStorage.setItem('token', data.token);
 
-            return data;
-        } catch (error) {
-            throw error;
-        }
+        return data;
     }
 
+    /**
+     * Registra novo usuário
+     * @param {Object} userData - Dados do usuário
+     * @returns {Promise} Dados do usuário criado
+     */
     async register(userData) {
-        try {
-            const response = await api.post('/user/create', userData);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
+        const response = await api.post('/user/create', userData);
+        return response.data;
     }
 
+    /**
+     * Realiza logout do usuário
+     */
     logout() {
         localStorage.removeItem('token');
     }
 
+    /**
+     * Retorna o token armazenado
+     * @returns {string|null} Token de autenticação
+     */
     getToken() {
         return localStorage.getItem('token');
     }
 
+    /**
+     * Verifica se usuário está autenticado
+     * @returns {boolean} True se autenticado
+     */
     isAuthenticated() {
         return !!this.getToken();
     }
 
+    /**
+     * Busca dados do usuário atual
+     * @returns {Promise} Dados do usuário
+     */
     async getCurrentUser() {
         const token = this.getToken();
         if (!token) {
             return null;
         }
 
-        try {
-            const response = await api.get('/user/profile');
-            return response.data.user; // Retorna apenas o objeto user da resposta
-        } catch (error) {
-            console.error('Erro ao buscar usuário:', error);
-            
-            // Se o erro for de autorização, fazer logout
-            if (error.message.includes('401') || error.message.includes('Token inválido')) {
-                this.logout();
-            }
-            
-            throw error;
-        }
+        const response = await api.get('/user/profile');
+        return response.data.user; // Retorna apenas o objeto user da resposta
     }
 }
 

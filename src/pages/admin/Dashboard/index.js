@@ -1,50 +1,93 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../hooks/useAuth';
+import { useAuth } from '../../../contexts/AuthContext';
+import adminService from '../../../services/admin.service';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+    const [stats, setStats] = useState({
+        totalProducts: 0,
+        totalCategories: 0,
+        totalCustomers: 0,
+        totalOrders: 0,
+        pendingOrders: 0,
+        revenue: 0
+    });
+    const [recentOrders, setRecentOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    // Dados mockados para demonstração
-    const stats = {
-        totalProducts: 45,
-        totalCategories: 8,
-        totalCustomers: 156,
-        totalOrders: 89,
-        pendingOrders: 12,
-        revenue: 15420.50
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            const data = await adminService.getDashboardStats();
+            setStats({
+                totalProducts: data.totalProducts || 0,
+                totalCategories: data.totalCategories || 0,
+                totalCustomers: data.totalCustomers || 0,
+                totalOrders: data.totalOrders || 0,
+                pendingOrders: data.pendingOrders || 0,
+                revenue: data.revenue || 0
+            });
+            setRecentOrders(data.recentOrders || []);
+        } catch (err) {
+            setError('Erro ao carregar dados do dashboard');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
     };
-
-    const recentOrders = [
-        { id: 1, customer: 'João Silva', total: 89.90, status: 'pending', date: '2025-10-12' },
-        { id: 2, customer: 'Maria Santos', total: 156.80, status: 'completed', date: '2025-10-12' },
-        { id: 3, customer: 'Pedro Costa', total: 67.50, status: 'preparing', date: '2025-10-11' },
-        { id: 4, customer: 'Ana Oliveira', total: 234.20, status: 'completed', date: '2025-10-11' },
-    ];
 
     const getStatusBadge = (status) => {
         const statusConfig = {
             pending: 'bg-yellow-100 text-yellow-800',
+            confirmed: 'bg-blue-100 text-blue-800',
+            preparing: 'bg-purple-100 text-purple-800',
+            delivering: 'bg-indigo-100 text-indigo-800',
             completed: 'bg-green-100 text-green-800',
-            preparing: 'bg-blue-100 text-blue-800',
             cancelled: 'bg-red-100 text-red-800'
         };
         
         const statusText = {
             pending: 'Pendente',
-            completed: 'Concluído',
+            confirmed: 'Confirmado',
             preparing: 'Preparando',
+            delivering: 'Em Entrega',
+            completed: 'Concluído',
             cancelled: 'Cancelado'
         };
 
         return (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[status]}`}>
-                {statusText[status]}
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusConfig[status] || 'bg-gray-100 text-gray-800'}`}>
+                {statusText[status] || status}
             </span>
         );
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Carregando dados do dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4">
+            {/* Mensagem de erro */}
+            {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
+            
             {/* Header */}
             <div className="mb-8">
                 <div className="flex justify-between items-center">
@@ -52,9 +95,26 @@ const AdminDashboard = () => {
                         <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
                         <p className="text-gray-600 mt-1">Bem-vindo, {user?.email || 'Administrador'}</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-sm text-gray-500">Último acesso</p>
-                        <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={loadDashboardData}
+                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                            title="Atualizar dados"
+                        >
+                            <span>🔄</span>
+                            Atualizar
+                        </button>
+                        <Link
+                            to="/admin/painel"
+                            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-lg"
+                        >
+                            <span>⚙️</span>
+                            Gerenciar Sistema
+                        </Link>
+                        <div className="text-right">
+                            <p className="text-sm text-gray-500">Último acesso</p>
+                            <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,7 +185,7 @@ const AdminDashboard = () => {
                         <h3 className="text-lg font-semibold mb-4">Ações Rápidas</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <Link 
-                                to="/admin/products/new" 
+                                to="/admin/painel?tab=produtos" 
                                 className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -135,7 +195,7 @@ const AdminDashboard = () => {
                             </Link>
 
                             <Link 
-                                to="/admin/categories/new" 
+                                to="/admin/painel?tab=categorias" 
                                 className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-green-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -145,7 +205,7 @@ const AdminDashboard = () => {
                             </Link>
 
                             <Link 
-                                to="/admin/orders" 
+                                to="/admin/painel?tab=pedidos" 
                                 className="flex flex-col items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-yellow-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -155,7 +215,7 @@ const AdminDashboard = () => {
                             </Link>
 
                             <Link 
-                                to="/admin/customers" 
+                                to="/admin/painel?tab=clientes" 
                                 className="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-purple-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -218,33 +278,41 @@ const AdminDashboard = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {recentOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{order.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {order.customer}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        {getStatusBadge(order.status)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {new Date(order.date).toLocaleDateString('pt-BR')}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <Link 
-                                            to={`/admin/orders/${order.id}`}
-                                            className="text-red-600 hover:text-red-900"
-                                        >
-                                            Ver detalhes
-                                        </Link>
+                            {recentOrders.length > 0 ? (
+                                recentOrders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            #{order.id.substring(0, 8)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {order.customer}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            R$ {order.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            {getStatusBadge(order.status)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {new Date(order.date).toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <Link 
+                                                to="/admin/painel"
+                                                className="text-red-600 hover:text-red-900"
+                                            >
+                                                Ver detalhes
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                                        Nenhum pedido encontrado
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
