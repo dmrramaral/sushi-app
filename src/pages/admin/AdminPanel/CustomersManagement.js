@@ -214,10 +214,10 @@ const CustomersManagement = () => {
                                     </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                                    <h3 className="text-sm font-medium text-gray-900 break-words">
                                         {customer.name}
                                     </h3>
-                                    <p className="text-xs text-gray-500 truncate mt-1">
+                                    <p className="text-xs text-gray-500 break-words mt-1">
                                         {customer.email}
                                     </p>
                                     <div className="mt-2 flex flex-wrap gap-2 items-center">
@@ -295,14 +295,14 @@ const CustomersManagement = () => {
                                 {/* Informações Básicas */}
                                 <div className="bg-gray-50 p-4 rounded-lg">
                                     <h4 className="font-semibold text-gray-900 mb-3">Informações Básicas</h4>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div>
                                             <p className="text-sm text-gray-500">Nome</p>
-                                            <p className="font-medium">{selectedCustomer.name}</p>
+                                            <p className="font-medium break-words">{selectedCustomer.name}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Email</p>
-                                            <p className="font-medium">{selectedCustomer.email}</p>
+                                            <p className="font-medium break-words">{selectedCustomer.email}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500">Tipo de Conta</p>
