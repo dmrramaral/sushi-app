@@ -61,11 +61,20 @@ const CustomersManagement = () => {
             setError('');
             setSuccess('');
             
-            // Atualiza tanto o campo 'role' quanto 'admin' para compatibilidade
-            await userService.updateUser(customer._id, {
+            const updateData = {
                 role: newRole,
                 admin: newRole === 'admin'
+            };
+            
+            console.log('📤 Enviando para backend:', {
+                userId: customer._id,
+                data: updateData
             });
+            
+            // Atualiza tanto o campo 'role' quanto 'admin' para compatibilidade
+            const response = await userService.updateUser(customer._id, updateData);
+            
+            console.log('✅ Resposta do backend:', response);
             
             setSuccess(`${customer.name} agora é ${roleNames[newRole]}!`);
             
@@ -76,8 +85,9 @@ const CustomersManagement = () => {
                 closeModal();
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Erro ao alterar perfil do usuário');
-            console.error('Erro ao alterar role:', err);
+            console.error('❌ Erro completo:', err);
+            console.error('📋 Resposta do erro:', err.response?.data);
+            setError(err.response?.data?.error || err.response?.data?.message || 'Erro ao alterar perfil do usuário');
         }
     };
 
