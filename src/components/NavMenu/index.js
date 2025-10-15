@@ -78,9 +78,9 @@ const NavMenu = () => {
         <ul className={`fixed md:static top-0 ${mobileMenuOpen ? 'right-0' : '-right-full'} flex flex-col md:flex-row md:gap-6 bg-white w-[70%] md:w-auto h-screen md:h-auto py-20 px-8 md:p-0 shadow-lg md:shadow-none transition-all duration-300 ease-in-out md:flex z-[1000]`}>
           <li className="my-2.5 md:my-0"><Link to="/" onClick={() => setMobileMenuOpen(false)} className="text-gray-800 hover:text-red-600 font-medium text-lg md:text-base block py-2.5 md:py-1 relative after:content-[''] after:absolute after:w-0 hover:after:w-full after:h-0.5 after:bg-red-600 after:bottom-0 after:left-0 after:transition-all">Home</Link></li>
           <li className="my-2.5 md:my-0"><Link to="/cardapio" onClick={() => setMobileMenuOpen(false)} className="text-gray-800 hover:text-red-600 font-medium text-lg md:text-base block py-2.5 md:py-1 relative after:content-[''] after:absolute after:w-0 hover:after:w-full after:h-0.5 after:bg-red-600 after:bottom-0 after:left-0 after:transition-all">Cardápio</Link></li>
-          <li className="my-2.5 md:my-0"><Link to="/sobre" onClick={() => setMobileMenuOpen(false)} className="text-gray-800 hover:text-red-600 font-medium text-lg md:text-base block py-2.5 md:py-1 relative after:content-[''] after:absolute after:w-0 hover:after:w-full after:h-0.5 after:bg-red-600 after:bottom-0 after:left-0 after:transition-all">Sobre</Link></li>
+         {/*  <li className="my-2.5 md:my-0"><Link to="/sobre" onClick={() => setMobileMenuOpen(false)} className="text-gray-800 hover:text-red-600 font-medium text-lg md:text-base block py-2.5 md:py-1 relative after:content-[''] after:absolute after:w-0 hover:after:w-full after:h-0.5 after:bg-red-600 after:bottom-0 after:left-0 after:transition-all">Sobre</Link></li>
           <li className="my-2.5 md:my-0"><Link to="/contato" onClick={() => setMobileMenuOpen(false)} className="text-gray-800 hover:text-red-600 font-medium text-lg md:text-base block py-2.5 md:py-1 relative after:content-[''] after:absolute after:w-0 hover:after:w-full after:h-0.5 after:bg-red-600 after:bottom-0 after:left-0 after:transition-all">Contato</Link></li>
-          
+           */}
           {/* Menu mobile - opções de autenticação */}
           <div className="md:hidden mt-8 pt-4 border-t border-gray-200">
             {loading ? (
