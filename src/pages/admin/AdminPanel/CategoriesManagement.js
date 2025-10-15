@@ -133,9 +133,7 @@ const CategoriesManagement = () => {
                     >
                         <div className="flex justify-between items-start mb-3">
                             <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-                                {category.productCount || 0} produtos
-                            </span>
+                     
                         </div>
                         
                         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
