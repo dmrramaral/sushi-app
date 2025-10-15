@@ -48,24 +48,26 @@ const CustomersManagement = () => {
         }
     };
 
-    const handleToggleAdmin = async (customer) => {
-        const action = customer.admin ? 'remover privilégios de admin' : 'tornar administrador';
+    const handleUpdateRole = async (customer, newRole) => {
+        const roleNames = {
+            'admin': 'Administrador',
+            'manager': 'Gerente',
+            'user': 'Usuário'
+        };
         
-        if (!window.confirm(`Tem certeza que deseja ${action} de ${customer.name}?`)) return;
+        if (!window.confirm(`Tem certeza que deseja alterar o perfil de ${customer.name} para ${roleNames[newRole]}?`)) return;
 
         try {
             setError('');
             setSuccess('');
             
+            // Atualiza tanto o campo 'role' quanto 'admin' para compatibilidade
             await userService.updateUser(customer._id, {
-                admin: !customer.admin
+                role: newRole,
+                admin: newRole === 'admin'
             });
             
-            setSuccess(
-                customer.admin 
-                    ? `${customer.name} não é mais administrador` 
-                    : `${customer.name} agora é administrador!`
-            );
+            setSuccess(`${customer.name} agora é ${roleNames[newRole]}!`);
             
             loadCustomers();
             
@@ -74,7 +76,7 @@ const CustomersManagement = () => {
                 closeModal();
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Erro ao alterar permissões do usuário');
+            setError(err.response?.data?.message || 'Erro ao alterar perfil do usuário');
             console.error('Erro ao alterar role:', err);
         }
     };
@@ -160,38 +162,40 @@ const CustomersManagement = () => {
                                                 ? 'bg-purple-100 text-purple-800' 
                                                 : 'bg-gray-100 text-gray-800'
                                         }`}>
-                                            {customer.admin ? '👑 Admin' : '👤 Cliente'}
+                                            {customer.role === 'admin' && '👑 Admin'}
+                                            {customer.role === 'manager' && '� Gerente'}
+                                            {customer.role === 'user' && '�👤 Cliente'}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {new Date(customer.createdAt).toLocaleDateString('pt-BR')}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button
-                                            onClick={() => handleViewDetails(customer)}
-                                            className="text-blue-600 hover:text-blue-900 mr-3"
-                                        >
-                                            👁️ Ver
-                                        </button>
-                                        <button
-                                            onClick={() => handleToggleAdmin(customer)}
-                                            className={`mr-3 ${
-                                                customer.admin 
-                                                    ? 'text-orange-600 hover:text-orange-900' 
-                                                    : 'text-green-600 hover:text-green-900'
-                                            }`}
-                                            title={customer.admin ? 'Remover privilégios de admin' : 'Tornar administrador'}
-                                        >
-                                            {customer.admin ? '👤 Remover Admin' : '👑 Tornar Admin'}
-                                        </button>
-                                        {!customer.admin && (
+                                        <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => handleDelete(customer._id)}
-                                                className="text-red-600 hover:text-red-900"
+                                                onClick={() => handleViewDetails(customer)}
+                                                className="text-blue-600 hover:text-blue-900"
                                             >
-                                                🗑️ Excluir
+                                                👁️ Ver
                                             </button>
-                                        )}
+                                            <select
+                                                value={customer.role || 'user'}
+                                                onChange={(e) => handleUpdateRole(customer, e.target.value)}
+                                                className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+                                            >
+                                                <option value="user">👤 Usuário</option>
+                                                <option value="manager">📊 Gerente</option>
+                                                <option value="admin">� Admin</option>
+                                            </select>
+                                            {customer.role === 'user' && (
+                                                <button
+                                                    onClick={() => handleDelete(customer._id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    🗑️ Excluir
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                             </tr>
                         ))}
@@ -222,7 +226,9 @@ const CustomersManagement = () => {
                                                 ? 'bg-purple-100 text-purple-800' 
                                                 : 'bg-gray-100 text-gray-800'
                                         }`}>
-                                            {customer.admin ? '👑 Admin' : '👤 Cliente'}
+                                            {customer.role === 'admin' && '👑 Admin'}
+                                            {customer.role === 'manager' && '� Gerente'}
+                                            {customer.role === 'user' && '👤 Usuário'}
                                         </span>
                                         <span className="text-xs text-gray-500">
                                             {new Date(customer.createdAt).toLocaleDateString('pt-BR')}
@@ -236,18 +242,17 @@ const CustomersManagement = () => {
                                             >
                                                 👁️ Ver Detalhes
                                             </button>
-                                            <button
-                                                onClick={() => handleToggleAdmin(customer)}
-                                                className={`flex-1 px-3 py-1.5 text-xs font-medium rounded hover:opacity-80 ${
-                                                    customer.admin 
-                                                        ? 'text-orange-600 bg-orange-50' 
-                                                        : 'text-green-600 bg-green-50'
-                                                }`}
-                                            >
-                                                {customer.admin ? '👤 Remover Admin' : '👑 Tornar Admin'}
-                                            </button>
                                         </div>
-                                        {!customer.admin && (
+                                        <select
+                                            value={customer.role || 'user'}
+                                            onChange={(e) => handleUpdateRole(customer, e.target.value)}
+                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+                                        >
+                                            <option value="user">👤 Usuário</option>
+                                            <option value="manager">� Gerente</option>
+                                            <option value="admin">👑 Administrador</option>
+                                        </select>
+                                        {customer.role === 'user' && (
                                             <button
                                                 onClick={() => handleDelete(customer._id)}
                                                 className="w-full px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
@@ -346,23 +351,29 @@ const CustomersManagement = () => {
                                 )}
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3 justify-end mt-6">
-                                <button
-                                    onClick={() => handleToggleAdmin(selectedCustomer)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                        selectedCustomer.admin
-                                            ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    }`}
-                                >
-                                    {selectedCustomer.admin ? '👤 Remover Privilégios de Admin' : '👑 Tornar Administrador'}
-                                </button>
-                                <button
-                                    onClick={closeModal}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                                >
-                                    Fechar
-                                </button>
+                            <div className="flex flex-col gap-4 mt-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nível de Acesso
+                                    </label>
+                                    <select
+                                        value={selectedCustomer.role || 'user'}
+                                        onChange={(e) => handleUpdateRole(selectedCustomer, e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                                    >
+                                        <option value="user">👤 Usuário</option>
+                                        <option value="manager">📊 Gerente</option>
+                                        <option value="admin">👑 Administrador</option>
+                                    </select>
+                                </div>
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={closeModal}
+                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                                    >
+                                        Fechar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
