@@ -51,7 +51,7 @@ const AdminDashboard = () => {
             completed: 'bg-green-100 text-green-800',
             cancelled: 'bg-red-100 text-red-800'
         };
-        
+
         const statusText = {
             pending: 'Pendente',
             confirmed: 'Confirmado',
@@ -87,30 +87,34 @@ const AdminDashboard = () => {
                     {error}
                 </div>
             )}
-            
+
             {/* Header */}
             <div className="mb-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Painel Administrativo</h1>
-                        <p className="text-gray-600 mt-1">Bem-vindo, {user?.email || 'Administrador'}</p>
+                        <h1 className="text-3xl sm:text-sm font-bold text-gray-900">Painel Administrativo</h1>
+                        <p className="text-gray-600 mt-1">Bem-vindo, {user?.name?.split(' ')[0] || 'Administrador'}!</p>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={loadDashboardData}
-                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
-                            title="Atualizar dados"
-                        >
-                            <span>🔄</span>
-                            Atualizar
-                        </button>
-                        <Link
-                            to="/admin/painel"
-                            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-lg"
-                        >
-                            <span>⚙️</span>
-                            Gerenciar Sistema
-                        </Link>
+                        <div className="flex flex-wrap gap-2">
+
+                            <Link
+                                to="/admin/painel"
+                                className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium shadow-lg"
+                            >
+                                <span>⚙️</span>
+                                <span className="hidden sm:inline">Gerenciar Sistema</span>
+                                <span className="sm:hidden">Gerenciar</span>
+                            </Link>
+                            <button
+                                onClick={loadDashboardData}
+                                className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                                title="Atualizar dados"
+                            >
+                                <span>🔄</span>
+                                <span className="hidden sm:inline">Atualiza</span>
+                            </button>
+                        </div>
                         <div className="text-right">
                             <p className="text-sm text-gray-500">Último acesso</p>
                             <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
@@ -184,8 +188,8 @@ const AdminDashboard = () => {
                     <div className="bg-white rounded-lg shadow p-6">
                         <h3 className="text-lg font-semibold mb-4">Ações Rápidas</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <Link 
-                                to="/admin/painel?tab=produtos" 
+                            <Link
+                                to="/admin/painel?tab=produtos"
                                 className="flex flex-col items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -194,8 +198,8 @@ const AdminDashboard = () => {
                                 <span className="text-sm font-medium">Novo Produto</span>
                             </Link>
 
-                            <Link 
-                                to="/admin/painel?tab=categorias" 
+                            <Link
+                                to="/admin/painel?tab=categorias"
                                 className="flex flex-col items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-green-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -204,8 +208,8 @@ const AdminDashboard = () => {
                                 <span className="text-sm font-medium">Nova Categoria</span>
                             </Link>
 
-                            <Link 
-                                to="/admin/painel?tab=pedidos" 
+                            <Link
+                                to="/admin/painel?tab=pedidos"
                                 className="flex flex-col items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-yellow-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -214,8 +218,8 @@ const AdminDashboard = () => {
                                 <span className="text-sm font-medium">Ver Pedidos</span>
                             </Link>
 
-                            <Link 
-                                to="/admin/painel?tab=clientes" 
+                            <Link
+                                to="/admin/painel?tab=clientes"
                                 className="flex flex-col items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                             >
                                 <svg className="h-8 w-8 text-purple-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -297,7 +301,7 @@ const AdminDashboard = () => {
                                             {new Date(order.date).toLocaleDateString('pt-BR')}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <Link 
+                                            <Link
                                                 to="/admin/painel"
                                                 className="text-red-600 hover:text-red-900"
                                             >

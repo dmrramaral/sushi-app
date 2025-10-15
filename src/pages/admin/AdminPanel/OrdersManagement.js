@@ -109,7 +109,7 @@ const OrdersManagement = () => {
             {/* Header com filtros */}
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Gerenciar Pedidos</h2>
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Gerenciar Pedidos</h2>
                     <p className="text-gray-600 mt-1">Total de {orders.length} pedidos</p>
                 </div>
                 
