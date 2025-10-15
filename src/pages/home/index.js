@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import alacarteImg from '../../assets/alacarte.jpg';
+import rodizioImg from '../../assets/rodizio.jpg';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ const Home = () => {
       <section className="flex flex-wrap gap-10 justify-center px-5 mb-16">
         <div className="flex-1 basis-[350px] bg-gray-50 rounded-xl p-8 text-center shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <img 
-            src="https://img.freepik.com/free-photo/delicious-sushi-arrangement_23-2149061769.jpg" 
+            src={rodizioImg} 
             alt="Rodízio de Sushi" 
             className="w-full h-[200px] object-cover rounded-lg mb-5"
           />
@@ -64,7 +66,7 @@ const Home = () => {
         
         <div className="flex-1 basis-[350px] bg-gray-50 rounded-xl p-8 text-center shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <img 
-            src="https://img.freepik.com/free-photo/delicious-japanese-food-arrangement_23-2149116758.jpg" 
+            src={alacarteImg} 
             alt="Sushi à la carte" 
             className="w-full h-[200px] object-cover rounded-lg mb-5"
           />
