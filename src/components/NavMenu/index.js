@@ -89,7 +89,7 @@ const NavMenu = () => {
               </div>
             ) : isAuthenticated ? (
               <div className="space-y-3">
-                <p className="text-gray-600 text-sm">Olá, {user?.name || 'Usuário'}</p>
+                <p className="text-gray-600 text-sm">Olá, {user?.name?.split(' ')[0] || 'Usuário'}</p>
                 
                 {/* Carrinho e Pedidos - Mobile */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
@@ -284,7 +284,7 @@ const NavMenu = () => {
                   </div>
                 )}
               </div>
-              <span className="text-gray-700 text-sm">Olá, {user?.email?.split('@')[0] || 'Usuário'}</span>
+              <span className="text-gray-700 text-sm">Olá, {user?.name?.split(' ')[0] || 'Usuário'}</span>
               <button 
                 className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-3 rounded transition-colors text-sm"
                 onClick={handleProfileRedirect}
