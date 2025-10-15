@@ -45,8 +45,8 @@ const AdminPanel = () => {
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
               Painel Administrativo
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Bem-vindo, {user?.name || 'Admin'}
+            <p className="mt-1 text-xs sm:text-sm text-gray-600">
+              Bem-vindo, {user?.name?.split(' ')[0] || 'Admin'}
             </p>
           </div>
         </div>

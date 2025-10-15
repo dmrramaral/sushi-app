@@ -141,8 +141,8 @@ const OrdersManagement = () => {
                 </div>
             )}
 
-            {/* Tabela de pedidos */}
-            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            {/* Tabela de pedidos - Desktop */}
+            <div className="hidden md:block bg-white shadow-md rounded-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
@@ -194,7 +194,7 @@ const OrdersManagement = () => {
                                     </div>
                                     {order.freight > 0 && (
                                         <div className="text-xs text-gray-500">
-                                            + R$ {order.total?.toFixed(2)} frete
+                                            + R$ {order.freight?.toFixed(2)} frete
                                         </div>
                                     )}
                                 </td>
@@ -244,6 +244,107 @@ const OrdersManagement = () => {
                             : `Nenhum pedido com status "${getStatusLabel(filterStatus)}"`
                         }
                     </div>
+                )}
+            </div>
+
+            {/* Cards Mobile */}
+            <div className="md:hidden space-y-4">
+                {filteredOrders.length === 0 ? (
+                    <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+                        {filterStatus === 'all' 
+                            ? 'Nenhum pedido encontrado' 
+                            : `Nenhum pedido com status "${getStatusLabel(filterStatus)}"`
+                        }
+                    </div>
+                ) : (
+                    filteredOrders.map((order) => (
+                        <div key={order._id} className="bg-white rounded-lg shadow-md p-4">
+                            {/* Header do Card */}
+                            <div className="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 className="font-bold text-gray-900">
+                                        Pedido #{order._id?.substring(0, 8)}
+                                    </h3>
+                                    <p className="text-sm text-gray-500">
+                                        {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                                    </p>
+                                </div>
+                                <span className={`px-2 py-1 text-xs font-semibold rounded-full
+                                    ${getStatusColor(order.status) === 'yellow' ? 'bg-yellow-100 text-yellow-800' : ''}
+                                    ${getStatusColor(order.status) === 'blue' ? 'bg-blue-100 text-blue-800' : ''}
+                                    ${getStatusColor(order.status) === 'purple' ? 'bg-purple-100 text-purple-800' : ''}
+                                    ${getStatusColor(order.status) === 'indigo' ? 'bg-indigo-100 text-indigo-800' : ''}
+                                    ${getStatusColor(order.status) === 'green' ? 'bg-green-100 text-green-800' : ''}
+                                    ${getStatusColor(order.status) === 'red' ? 'bg-red-100 text-red-800' : ''}
+                                `}>
+                                    {getStatusLabel(order.status)}
+                                </span>
+                            </div>
+
+                            {/* Info do Cliente */}
+                            <div className="mb-3 pb-3 border-b border-gray-200">
+                                <p className="text-sm font-medium text-gray-900">
+                                    {order.user?.name || 'N/A'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                    {order.user?.email || ''}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    {order.items?.length || 0} item(s)
+                                </p>
+                            </div>
+
+                            {/* Total */}
+                            <div className="mb-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">Subtotal:</span>
+                                    <span className="font-bold text-gray-900">
+                                        R$ {order.subtotal?.toFixed(2)}
+                                    </span>
+                                </div>
+                                {order.freight > 0 && (
+                                    <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                                        <span>Frete:</span>
+                                        <span>R$ {order.freight?.toFixed(2)}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Atualizar Status */}
+                            <div className="mb-3">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                    Atualizar Status
+                                </label>
+                                <select
+                                    value={order.status}
+                                    onChange={(e) => handleUpdateStatus(order._id, e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:border-blue-500 bg-white"
+                                >
+                                    {statusOptions.map(status => (
+                                        <option key={status.value} value={status.value}>
+                                            {status.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Ações */}
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleViewDetails(order)}
+                                    className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
+                                >
+                                    👁️ Ver Detalhes
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(order._id)}
+                                    className="px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
 

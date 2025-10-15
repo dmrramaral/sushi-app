@@ -92,7 +92,7 @@ const AdminDashboard = () => {
             <div className="mb-8">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl sm:text-sm font-bold text-gray-900">Painel Administrativo</h1>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Painel Administrativo</h1>
                         <p className="text-gray-600 mt-1">Bem-vindo, {user?.name?.split(' ')[0] || 'Administrador'}!</p>
                     </div>
                     <div className="flex items-center gap-4">
@@ -115,7 +115,7 @@ const AdminDashboard = () => {
                                 <span className="hidden sm:inline">Atualiza</span>
                             </button>
                         </div>
-                        <div className="text-right">
+                        <div className="hidden sm:inline text-right">
                             <p className="text-sm text-gray-500">Último acesso</p>
                             <p className="text-sm font-medium">{new Date().toLocaleDateString('pt-BR')}</p>
                         </div>
