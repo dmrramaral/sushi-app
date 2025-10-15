@@ -168,9 +168,11 @@ const ProductsManagement = () => {
 
             {/* Tabela de produtos */}
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
+                {/* Versão Desktop */}
+                <div className="hidden md:block overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Imagem
                             </th>
@@ -189,8 +191,8 @@ const ProductsManagement = () => {
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ações
                             </th>
-                        </tr>
-                    </thead>
+                            </tr>
+                        </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {products.map((product) => {
                             const imageUrl = product.image || (product.images && product.images[0]) || 'https://via.placeholder.com/150';
@@ -247,7 +249,68 @@ const ProductsManagement = () => {
                         })}
                     </tbody>
                 </table>
+                </div>
 
+                {/* Versão Mobile - Cards */}
+                <div className="md:hidden divide-y divide-gray-200">
+                    {products.map((product) => {
+                        const imageUrl = product.image || (product.images && product.images[0]) || 'https://via.placeholder.com/150';
+                        
+                        return (
+                            <div key={product._id} className="p-4 hover:bg-gray-50">
+                                <div className="flex gap-4">
+                                    <img
+                                        src={imageUrl}
+                                        alt={product.name}
+                                        className="h-20 w-20 rounded object-cover flex-shrink-0"
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/150';
+                                        }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="text-sm font-medium text-gray-900 truncate">
+                                            {product.name}
+                                        </h3>
+                                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                                            {product.description}
+                                        </p>
+                                        <div className="mt-2 flex flex-wrap gap-2 items-center">
+                                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                {product.category?.name || 'Sem categoria'}
+                                            </span>
+                                            <span className="text-sm font-bold text-gray-900">
+                                                R$ {product.price?.toFixed(2)}
+                                            </span>
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                product.stock > 10 ? 'bg-green-100 text-green-800' :
+                                                product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                            }`}>
+                                                {product.stock} un.
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 flex gap-2">
+                                            <button
+                                                onClick={() => handleEdit(product)}
+                                                className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
+                                            >
+                                                ✏️ Editar
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(product._id)}
+                                                className="flex-1 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100"
+                                            >
+                                                🗑️ Excluir
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                
+                {/* Mensagem quando não há produtos */}
                 {products.length === 0 && (
                     <div className="text-center py-12 text-gray-500">
                         Nenhum produto cadastrado
