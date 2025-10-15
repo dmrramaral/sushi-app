@@ -49,10 +49,7 @@ export const CartProvider = ({ children }) => {
     if (!data) return [];
     const products = data.products || data.cart?.products || [];
     return products.map(p => {
-      // Casos possíveis:
-      // p = { _id: { ...productDoc }, quantity }
-      // p = { _id: 'productId', quantity }
-      // p = { product: { ...productDoc }, quantity }
+      
       const productDoc = p.product || (typeof p._id === 'object' ? p._id : null);
       const productId = productDoc?._id || (typeof p._id === 'string' ? p._id : p.id);
       return {

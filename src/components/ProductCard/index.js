@@ -11,7 +11,6 @@ import { useCart } from '../../contexts/CartContext';
 const ProductCard = ({ product, onAddToCart }) => {
     const { isAuthenticated } = useAuth();
     const { addItem, updateQuantity, items } = useCart();
-    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
     // Encontrar a quantidade atual no carrinho
@@ -45,7 +44,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         return stars;
     };
 
-    // Função para adicionar ao carrinho
+    // Função para adicionar ao carrinho (atualização otimista - sem bloquear UI)
     const handleAddToCart = async () => {
         if (!isAuthenticated) {
             setMessage('Você precisa estar logado para adicionar produtos ao carrinho');
@@ -53,74 +52,71 @@ const ProductCard = ({ product, onAddToCart }) => {
             return;
         }
 
-        setLoading(true);
         setMessage('');
 
         try {
-            await addItem(product._id, 1);
-            setMessage('Produto adicionado ao carrinho!');
+            // Executa em segundo plano sem bloquear
+            addItem(product._id, 1).catch(error => {
+                setMessage(error.message || 'Erro ao adicionar produto');
+                setTimeout(() => setMessage(''), 3000);
+            });
             
             // Chama callback se fornecido
             if (onAddToCart) {
                 onAddToCart(product);
             }
-
-            setTimeout(() => setMessage(''), 3000);
         } catch (error) {
             setMessage(error.message || 'Erro ao adicionar produto');
             setTimeout(() => setMessage(''), 3000);
-        } finally {
-            setLoading(false);
         }
     };
 
-        // Função para aumentar quantidade
-        const handleIncrease = async () => {
-            if (!isAuthenticated) {
-                setMessage('Você precisa estar logado para adicionar produtos ao carrinho');
-                setTimeout(() => setMessage(''), 3000);
-                return;
+    // Função para aumentar quantidade (atualização otimista)
+    const handleIncrease = async () => {
+        if (!isAuthenticated) {
+            setMessage('Você precisa estar logado para adicionar produtos ao carrinho');
+            setTimeout(() => setMessage(''), 3000);
+            return;
+        }
+
+        setMessage('');
+
+        try {
+            const newQuantity = currentQuantity + 1;
+            if (currentQuantity === 0) {
+                addItem(product._id, 1).catch(error => {
+                    setMessage(error.message || 'Erro ao atualizar quantidade');
+                    setTimeout(() => setMessage(''), 3000);
+                });
+            } else {
+                updateQuantity(product._id, newQuantity).catch(error => {
+                    setMessage(error.message || 'Erro ao atualizar quantidade');
+                    setTimeout(() => setMessage(''), 3000);
+                });
             }
+        } catch (error) {
+            setMessage(error.message || 'Erro ao atualizar quantidade');
+            setTimeout(() => setMessage(''), 3000);
+        }
+    };
 
-            setLoading(true);
-            setMessage('');
+    // Função para diminuir quantidade (atualização otimista)
+    const handleDecrease = async () => {
+        if (!isAuthenticated || currentQuantity === 0) return;
 
-            try {
-                const newQuantity = currentQuantity + 1;
-                if (currentQuantity === 0) {
-                    await addItem(product._id, 1);
-                } else {
-                    await updateQuantity(product._id, newQuantity);
-                }
-                setMessage('Quantidade atualizada!');
-                setTimeout(() => setMessage(''), 2000);
-            } catch (error) {
+        setMessage('');
+
+        try {
+            const newQuantity = currentQuantity - 1;
+            updateQuantity(product._id, newQuantity).catch(error => {
                 setMessage(error.message || 'Erro ao atualizar quantidade');
                 setTimeout(() => setMessage(''), 3000);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        // Função para diminuir quantidade
-        const handleDecrease = async () => {
-            if (!isAuthenticated || currentQuantity === 0) return;
-
-            setLoading(true);
-            setMessage('');
-
-            try {
-                const newQuantity = currentQuantity - 1;
-                await updateQuantity(product._id, newQuantity);
-                setMessage(newQuantity === 0 ? 'Produto removido do carrinho!' : 'Quantidade atualizada!');
-                setTimeout(() => setMessage(''), 2000);
-            } catch (error) {
-                setMessage(error.message || 'Erro ao atualizar quantidade');
-                setTimeout(() => setMessage(''), 3000);
-            } finally {
-                setLoading(false);
-            }
-        };
+            });
+        } catch (error) {
+            setMessage(error.message || 'Erro ao atualizar quantidade');
+            setTimeout(() => setMessage(''), 3000);
+        }
+    };
 
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
@@ -187,17 +183,15 @@ const ProductCard = ({ product, onAddToCart }) => {
                             {currentQuantity === 0 ? (
                                 <button
                                     onClick={handleAddToCart}
-                                    disabled={loading || product.stock === 0}
+                                    disabled={product.stock === 0}
                                     className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-semibold transition-colors ${
                                         product.stock === 0
                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            : loading
-                                            ? 'bg-blue-400 text-white cursor-wait'
                                             : 'bg-blue-600 text-white hover:bg-blue-700'
                                     }`}
                                 >
                                     <ShoppingCartIcon className="h-5 w-5" />
-                                    {loading ? 'Adicionando...' : 'Adicionar ao Carrinho'}
+                                    Adicionar ao Carrinho
                                 </button>
                             ) : (
                                 <div className="space-y-2">
@@ -208,8 +202,7 @@ const ProductCard = ({ product, onAddToCart }) => {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={handleDecrease}
-                                                disabled={loading}
-                                                className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                                                className="w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors"
                                             >
                                                 -
                                             </button>
@@ -218,8 +211,8 @@ const ProductCard = ({ product, onAddToCart }) => {
                                             </span>
                                             <button
                                                 onClick={handleIncrease}
-                                                disabled={loading || product.stock <= currentQuantity}
-                                                className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                                                disabled={product.stock <= currentQuantity}
+                                                className="w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                             >
                                                 +
                                             </button>
@@ -227,17 +220,15 @@ const ProductCard = ({ product, onAddToCart }) => {
                                     </div>
                                     <button
                                         onClick={handleAddToCart}
-                                        disabled={loading || product.stock <= currentQuantity}
+                                        disabled={product.stock <= currentQuantity}
                                         className={`w-full flex items-center justify-center gap-2 py-1.5 px-4 rounded-lg font-medium text-sm transition-colors ${
                                             product.stock <= currentQuantity
                                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                : loading
-                                                ? 'bg-blue-400 text-white cursor-wait'
                                                 : 'bg-blue-600 text-white hover:bg-blue-700'
                                         }`}
                                     >
                                         <ShoppingCartIcon className="h-4 w-4" />
-                                        {loading ? 'Adicionando...' : 'Adicionar +1'}
+                                        Adicionar +1
                                     </button>
                                 </div>
                             )}
