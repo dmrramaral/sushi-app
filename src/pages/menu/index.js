@@ -1,4 +1,4 @@
-import { FunnelIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useState } from 'react';
 import ProductCard from '../../components/ProductCard';
 import categoryService from '../../services/category.service';
@@ -165,37 +165,6 @@ const Menu = () => {
                             return `${totalProducts} ${produtoTexto}`;
                         })()}
                     </p>
-                    
-                    {/* Filtros de categoria */}
-                    <div className="flex items-center gap-2">
-                        <FunnelIcon className="h-5 w-5 text-gray-600" />
-                        <span className="text-gray-600">Categorias:</span>
-                        <div className="flex gap-2 flex-wrap">
-                            <button
-                                onClick={handleClearCategory}
-                                className={`px-3 py-1 rounded-full text-sm transition-all ${
-                                    !selectedCategory 
-                                        ? 'bg-red-500 text-white' 
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                Todas
-                            </button>
-                            {categories.slice(0, 4).map(cat => (
-                                <button
-                                    key={cat._id}
-                                    onClick={() => handleSelectCategory(cat._id)}
-                                    className={`px-3 py-1 rounded-full text-sm transition-all ${
-                                        selectedCategory === cat._id 
-                                            ? 'bg-red-500 text-white' 
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    {cat.name}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
 
                 {/* Filtros de categoria - Seção completa */}

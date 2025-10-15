@@ -16,6 +16,9 @@ const Register = () => {
   });
   const [address, setAddress] = useState({
     street: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
     city: '',
     state: '',
     zipCode: '',
@@ -23,6 +26,66 @@ const Register = () => {
   });
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState('');
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  // Buscar endereço pelo CEP
+  const handleCepBlur = async (e) => {
+    const cep = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+    
+    if (cep.length !== 8) {
+      return;
+    }
+
+    setLoadingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (data.erro) {
+        setErrors({
+          ...errors,
+          zipCode: 'CEP não encontrado'
+        });
+      } else {
+        setAddress({
+          ...address,
+          street: data.logradouro || '',
+          city: data.localidade || '',
+          state: data.uf || '',
+          neighborhood: data.bairro || '',
+          zipCode: cep
+        });
+        
+        // Limpar erro de CEP se houver
+        if (errors.zipCode) {
+          const { zipCode, ...restErrors } = errors;
+          setErrors(restErrors);
+        }
+      }
+    } catch (error) {
+      setErrors({
+        ...errors,
+        zipCode: 'Erro ao buscar CEP'
+      });
+    } finally {
+      setLoadingCep(false);
+    }
+  };
+
+  // Formatar CEP enquanto digita
+  const handleCepChange = (e) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove não-numéricos
+    
+    // Formatar CEP: 00000-000
+    if (value.length > 5) {
+      value = value.slice(0, 5) + '-' + value.slice(5, 8);
+    }
+    
+    setAddress({
+      ...address,
+      zipCode: value
+    });
+  };
 
   // Validação de senha
   const validatePassword = (password) => {
@@ -259,8 +322,28 @@ const Register = () => {
 
         <div className="flex items-center my-5">
           <div className="flex-grow h-px bg-gray-300"></div>
-          <span className="px-3 text-sm text-gray-500">Endereço</span>
+          <span className="px-3 text-sm text-gray-500">Endereço (Opcional)</span>
           <div className="flex-grow h-px bg-gray-300"></div>
+        </div>
+
+        <div className="flex flex-col">
+          <label htmlFor="zipCode" className="mb-1.5 font-medium text-gray-700">
+            CEP
+            {loadingCep && <span className="ml-2 text-xs text-blue-600">🔍 Buscando...</span>}
+          </label>
+          <input
+            type="text"
+            id="zipCode"
+            name="zipCode"
+            value={address.zipCode}
+            onChange={handleCepChange}
+            onBlur={handleCepBlur}
+            placeholder="00000-000"
+            maxLength="9"
+            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
+          />
+          {errors.zipCode && <span className="text-red-600 text-sm mt-1">{errors.zipCode}</span>}
+          <span className="text-xs text-gray-500 mt-1">Digite o CEP e o endereço será preenchido automaticamente</span>
         </div>
 
         <div className="flex flex-col">
@@ -275,40 +358,71 @@ const Register = () => {
           />
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <label htmlFor="number" className="mb-1.5 font-medium text-gray-700">Número</label>
+            <input
+              type="text"
+              id="number"
+              name="number"
+              value={address.number}
+              onChange={handleAddressChange}
+              className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="complement" className="mb-1.5 font-medium text-gray-700">Complemento</label>
+            <input
+              type="text"
+              id="complement"
+              name="complement"
+              value={address.complement}
+              onChange={handleAddressChange}
+              placeholder="Apt, Bloco, etc."
+              className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
+            />
+          </div>
+        </div>
+
         <div className="flex flex-col">
-          <label htmlFor="city" className="mb-1.5 font-medium text-gray-700">Cidade</label>
+          <label htmlFor="neighborhood" className="mb-1.5 font-medium text-gray-700">Bairro</label>
           <input
             type="text"
-            id="city"
-            name="city"
-            value={address.city}
+            id="neighborhood"
+            name="neighborhood"
+            value={address.neighborhood}
             onChange={handleAddressChange}
             className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
           />
         </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="state" className="mb-1.5 font-medium text-gray-700">Estado</label>
-          <input
-            type="text"
-            id="state"
-            name="state"
-            value={address.state}
-            onChange={handleAddressChange}
-            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
-          />
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <label htmlFor="city" className="mb-1.5 font-medium text-gray-700">Cidade</label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              value={address.city}
+              onChange={handleAddressChange}
+              className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
+            />
+          </div>
 
-        <div className="flex flex-col">
-          <label htmlFor="zipCode" className="mb-1.5 font-medium text-gray-700">CEP</label>
-          <input
-            type="text"
-            id="zipCode"
-            name="zipCode"
-            value={address.zipCode}
-            onChange={handleAddressChange}
-            className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10"
-          />
+          <div className="flex flex-col">
+            <label htmlFor="state" className="mb-1.5 font-medium text-gray-700">Estado</label>
+            <input
+              type="text"
+              id="state"
+              name="state"
+              value={address.state}
+              onChange={handleAddressChange}
+              maxLength="2"
+              placeholder="SP"
+              className="p-3 border border-gray-300 rounded-md focus:outline-none focus:border-green-800 focus:ring-2 focus:ring-green-800/10 uppercase"
+            />
+          </div>
         </div>
 
         {errors.submit && <div className="text-red-600 text-sm mt-2">{errors.submit}</div>}
