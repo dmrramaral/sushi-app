@@ -16,7 +16,6 @@ import Menu from './pages/menu';
 import AdminPanel from './pages/admin/AdminPanel';
 import AdminDashboard from './pages/admin/Dashboard';
 import ProductManagement from './pages/admin/Products';
-import ProductForm from './pages/admin/Products/ProductForm';
 import CartPage from './pages/cart';
 import OrdersPage from './pages/orders';
 
@@ -84,22 +83,7 @@ function App() {
               </AdminRoute>
             } 
           />
-          <Route 
-            path="/admin/products/new" 
-            element={
-              <AdminRoute>
-                <ProductForm />
-              </AdminRoute>
-            } 
-          />
-          <Route 
-            path="/admin/products/:id/edit" 
-            element={
-              <AdminRoute>
-                <ProductForm />
-              </AdminRoute>
-            } 
-          />
+          {/* Criação/Edição de produtos agora acontece inline na página de lista */}
           
           {/* Páginas Informativas */}
           <Route path="/sobre" element={<h1 className="py-24 px-5 text-center">Página Sobre em construção</h1>} />
