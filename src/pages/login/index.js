@@ -21,8 +21,11 @@ const Login = () => {
             
             // Limpar state após exibição
             window.history.replaceState({}, document.title);
+            
+            // Limpar erros do contexto quando vier do registro com sucesso
+            clearError();
         }
-    }, [location]);
+    }, [location, clearError]);
 
     // Limpar erros quando o componente for montado ou quando houver mudanças
     useEffect(() => {

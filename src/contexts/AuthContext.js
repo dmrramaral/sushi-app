@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const initializeAuth = async () => {
             try {
-                console.log('AuthProvider: Inicializando...'); // Debug
+               // console.log('AuthProvider: Inicializando...'); // Debug
                 dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
                 
                 const token = authService.getToken();
@@ -253,7 +253,7 @@ export const AuthProvider = ({ children }) => {
 // Hook personalizado para usar o contexto
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    console.log('useAuth context:', context); // Debug
+    //console.log('useAuth context:', context); // Debug
     if (context === undefined) {
         throw new Error('useAuth deve ser usado dentro de um AuthProvider');
     }

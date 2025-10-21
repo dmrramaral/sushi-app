@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -6,7 +6,7 @@ const Register = () => {
   const navigate = useNavigate();
   
   // Usar o contexto de autenticação
-  const { register: authRegister, loading } = useAuth();
+  const { register: authRegister, loading, error: authError, clearError } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -27,6 +27,13 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState('');
   const [loadingCep, setLoadingCep] = useState(false);
+
+  // Limpar erro do contexto quando o usuário começar a digitar o nome
+  useEffect(() => {
+    if (formData.name && authError) {
+      clearError();
+    }
+  }, [formData.email, authError, clearError]);
 
   // Buscar endereço pelo CEP
   const handleCepBlur = async (e) => {
@@ -204,37 +211,32 @@ const Register = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      try {
-        // Preparar dados para a API
-        const userData = {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          addresses: [address]
-        };
+      // Limpar apenas erros de submissão anteriores
+      const { submit, ...otherErrors } = errors;
+      setErrors(otherErrors);
+      
+      // Preparar dados para a API
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        addresses: [address]
+      };
 
-        // Usar o contexto de autenticação
-        const result = await authRegister(userData);
+      // Usar o contexto de autenticação
+      const result = await authRegister(userData);
 
-        if (result.success) {
-          // Redirecionar para login com state
-          navigate('/login', { 
-            state: { 
-              fromRegister: true,
-              email: formData.email,
-              message: 'Cadastro realizado com sucesso! Faça login para continuar.' 
-            } 
-          });
-        } else {
-          setErrors({
-            submit: result.error || 'Erro ao criar conta. Tente novamente.'
-          });
-        }
-      } catch (error) {
-        setErrors({
-          submit: error.message || 'Erro ao criar conta. Tente novamente.'
+      if (result.success) {
+        // Redirecionar para login com state
+        navigate('/login', { 
+          state: { 
+            fromRegister: true,
+            email: formData.email,
+            message: 'Cadastro realizado com sucesso! Faça login para continuar.' 
+          } 
         });
       }
+      // Se houver erro, ele será exibido via authError do contexto
     }
   };
 
@@ -244,6 +246,22 @@ const Register = () => {
         <h1 className="text-2xl font-bold text-red-600 mb-3">Criar Conta</h1>
         <p className="text-gray-600">Preencha as informações abaixo para se cadastrar</p>
       </div>
+
+      {/* Exibir erro do contexto de autenticação */}
+      {authError && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg font-medium flex items-center gap-2">
+          <span className="text-xl">⚠️</span>
+          <span>{authError}</span>
+        </div>
+      )}
+
+      {/* Exibir erros locais de submissão */}
+      {errors.submit && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg font-medium flex items-center gap-2">
+          <span className="text-xl">⚠️</span>
+          <span>{errors.submit}</span>
+        </div>
+      )}
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col">
@@ -424,8 +442,6 @@ const Register = () => {
             />
           </div>
         </div>
-
-        {errors.submit && <div className="text-red-600 text-sm mt-2">{errors.submit}</div>}
 
         <button 
           type="submit" 
