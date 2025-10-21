@@ -28,12 +28,12 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState('');
   const [loadingCep, setLoadingCep] = useState(false);
 
-  // Limpar erro do contexto quando o usuário começar a digitar o nome
+  // Limpar erro do contexto quando o usuário começar a digitar
   useEffect(() => {
-    if (formData.name && authError) {
+    if ((formData.name || formData.email) && authError) {
       clearError();
     }
-  }, [formData.email, authError, clearError]);
+  }, [formData.name, formData.email, authError, clearError]);
 
   // Buscar endereço pelo CEP
   const handleCepBlur = async (e) => {
